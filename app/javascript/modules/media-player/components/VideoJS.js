@@ -29,6 +29,7 @@ export default function VideoJS({
 }) {
     const videoRef = useRef(null);
     const playerRef = useRef(null);
+    const resizeObserverRef = useRef(null);
 
     useEffect(() => {
         // make sure Video.js player is only initialized once
@@ -41,6 +42,46 @@ export default function VideoJS({
             const player = playerRef.current = videojs(videoElement, options, () => {
                 onReady && onReady(player);
             });
+
+            // 🔁 Function to manage subtitles button state and auto-disable tracks
+            const toggleSubtitlesButton = () => {
+                const width = player.el().offsetWidth;
+                const isSmall = width < 300;
+
+                const subsButton = player.controlBar.getChild('SubsCapsButton');
+
+                if (subsButton && subsButton.el()) {
+                    subsButton.el().setAttribute('aria-disabled', isSmall ? 'true' : 'false');
+                    subsButton.el().classList.toggle('vjs-disabled', isSmall);
+                    subsButton.el().style.pointerEvents = isSmall ? 'none' : 'auto';
+                }
+
+                if (isSmall) {
+                    const tracks = player.textTracks();
+                    for (let i = 0; i < tracks.length; i++) {
+                        if (tracks[i].mode === 'showing') {
+                            tracks[i].mode = 'disabled';
+                        }
+                    }
+                }
+            };
+
+            // Initial check
+            toggleSubtitlesButton();
+
+            // ▶ log size on play
+            player.on('play', () => {
+                const width = player.el().offsetWidth;
+                const height = player.el().offsetHeight;
+                console.log('Video player size on play:', { width, height });
+            });
+
+            // 👇 Use ResizeObserver instead of window resize
+            resizeObserverRef.current = new ResizeObserver(() => {
+                toggleSubtitlesButton();
+            });
+            resizeObserverRef.current.observe(player.el());
+
         } else {
             // you can update player here [update player through props]
             // const player = playerRef.current;
@@ -61,6 +102,10 @@ export default function VideoJS({
         const player = playerRef.current;
 
         return () => {
+            if (resizeObserverRef.current && player?.el()) {
+                resizeObserverRef.current.unobserve(player.el());
+                resizeObserverRef.current.disconnect();
+            }
             if (player) {
                 player.dispose();
                 playerRef.current = null;
