@@ -43,7 +43,7 @@ export default function VideoJS({
                 onReady && onReady(player);
             });
 
-            // 🔁 Function to manage subtitles button state and auto-disable tracks
+            // Function to manage subtitles button state and auto-disable tracks
             const toggleSubtitlesButton = () => {
                 const width = player.el().offsetWidth;
                 const isSmall = width < 300;
