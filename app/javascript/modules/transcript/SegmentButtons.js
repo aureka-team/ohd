@@ -57,36 +57,13 @@ export default function SegmentButtons({
     };
 
     const handleEditButtonClick = () => {
-        if (isPlaying && window.mainPlayerInstance) {
+        if (window.mainPlayerInstance) {
             window.mainPlayerInstance.pause();
-            updateIsPlaying(false);
+            console.log(window.mainPlayerInstance, 'window.mainPlayerInstance')
         }
         
         handleButtonClick();
     };
-
-    useEffect(() => {
-        const checkPlayerStatus = () => {
-            if (window.mainPlayerInstance) {
-                const mainPlayerIsPlaying = !window.mainPlayerInstance.paused();
-                setIsPlaying(mainPlayerIsPlaying);
-            }
-        };
-        
-        checkPlayerStatus();
-        
-        if (window.mainPlayerInstance) {
-            window.mainPlayerInstance.on('play', () => setIsPlaying(true));
-            window.mainPlayerInstance.on('pause', () => setIsPlaying(false));
-        }
-        
-        return () => {
-            if (window.mainPlayerInstance) {
-                window.mainPlayerInstance.off('play');
-                window.mainPlayerInstance.off('pause');
-            }
-        };
-    }, []);
 
     return (
         <div className={classNames('Segment-buttons', { 'is-active': active })}>
